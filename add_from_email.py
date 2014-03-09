@@ -2,6 +2,7 @@
 from db_connect import db_connect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql import exists
 from models import *
 from email import message_from_file
 import re, optparse, sys
@@ -19,12 +20,12 @@ if options.use_file:
 		mail_file = open(options.filename)
 	except IOError:
 		sys.stdout.write("There was an error reading the specified file. Aborting.")
-		return
+		sys.exit()
 else:
 	mail_file = sys.stdin
-	if mail_file = '':
+	if mail_file == '':
 		sys.stdout.write("Either use -f to specify a file or input a message with stdin.")
-		return
+		sys.exit()
 
 msg = message_from_file(mail_file)
 
@@ -42,12 +43,14 @@ else:
 			break
 
 #remove \r from string because Windows >.<
-msg_body = re.sub(r'\\r', '', msg_body)
+#msg_body = re.sub(r'\\r', '', msg_body)
 
-quotes = msg_body.split('\n\n')
+#split the quotes out into different strings for insertion
+quotes = msg_body.split('\r\n\r')
 
 #now actually connect to database
 engine = db_connect('emailquotes', 'localhost')
+Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -60,10 +63,14 @@ except NoResultFound:
 		user_name = session.query(User).filter(User.name == quote_from_name).one()
 	except NoResultFound:
 		user_name = User(name=quote_from_name)
-	user_address = Address(email_address=quote_from_address, user=user)
-
-
+		session.add(user_name)
+	user_address = Address(email_address=quote_from_address, user=user_name)
+	session.add(user_address)
 
 for quote in quotes:
-	
+	if session.query(Quote).filter(Quote.message == quote).first():
+		continue
+	new_quote = Quote(message=quote, send_user=user_name)
+	session.add(new_quote)
 
+session.commit()
