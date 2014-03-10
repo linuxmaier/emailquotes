@@ -1,4 +1,4 @@
 *.pyc
 my.cnf
-mail_log
+email_log.log
 testemail.txt
