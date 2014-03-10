@@ -30,7 +30,7 @@ class Address(Base):
 	__tablename__ = 'addresses'
 
 	id = Column(Integer, primary_key=True)
-	email_address = Column(String(25), nullable=False)
+	email_address = Column(String(100), nullable=False)
 	user_id = Column(Integer, ForeignKey('users.id'))
 
 	user = relationship("User", backref=backref('addresses', order_by=id))

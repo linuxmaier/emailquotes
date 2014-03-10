@@ -10,7 +10,7 @@ engine = db_connect('emailquotes', 'localhost')
 Session = sessionmaker(bind=engine)
 session = Session()
 message_template = "This is your daily dose of quote, courtesy of the McMaier Expedition:\n\n"
-sending_address = #insert sending address here
+sending_address = "mcmaier-quotes@mcmaier-expedition.com"
 
 for user in session.query(User).all():
 	#pick random quote from ones assigned to user
